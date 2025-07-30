@@ -1,0 +1,16 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.TransactionRoutes = void 0;
+const express_1 = require("express");
+const transaction_controller_1 = require("./transaction.controller");
+const checkAuth_1 = require("../../middlewares/checkAuth");
+const user_interface_1 = require("../user/user.interface");
+const router = (0, express_1.Router)();
+router.post('/add-money', (0, checkAuth_1.checkAuth)([user_interface_1.Role.user, user_interface_1.Role.admin, user_interface_1.Role.agent]), transaction_controller_1.TransactionController.addMoney);
+router.post('/withdraw', (0, checkAuth_1.checkAuth)([user_interface_1.Role.user, user_interface_1.Role.admin, user_interface_1.Role.agent]), transaction_controller_1.TransactionController.withdrawMoney);
+router.post('/send-money', (0, checkAuth_1.checkAuth)([user_interface_1.Role.user, user_interface_1.Role.admin, user_interface_1.Role.agent]), transaction_controller_1.TransactionController.sendMoney);
+router.get('/', (0, checkAuth_1.checkAuth)(['admin', 'user', 'agent']), transaction_controller_1.TransactionController.getTransactionHistory);
+router.post('/agent/cash-in', (0, checkAuth_1.checkAuth)(user_interface_1.Role.agent), transaction_controller_1.TransactionController.cashInByAgent);
+router.post('/agent/cash-out', (0, checkAuth_1.checkAuth)(user_interface_1.Role.agent), transaction_controller_1.TransactionController.cashOutByAgent);
+router.get('/agent/commissions', (0, checkAuth_1.checkAuth)(user_interface_1.Role.agent), transaction_controller_1.TransactionController.getAgentCommissionHistory);
+exports.TransactionRoutes = router;
