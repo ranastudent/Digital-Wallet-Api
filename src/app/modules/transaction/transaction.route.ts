@@ -32,7 +32,7 @@ router.post(
 router.get('/agent/commissions', checkAuth(Role.agent), TransactionController.getAgentCommissionHistory);
 
 router.get(
-  '/user/:id',
+  '/:id',
   checkAuth([Role.user, Role.admin]), // admin can see any user, user can see their own
   TransactionController.getUserTransactions
 );
