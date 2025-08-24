@@ -33,8 +33,7 @@ router.get('/agent/commissions', checkAuth(Role.agent), TransactionController.ge
 
 router.get(
   '/:id',
-  checkAuth([Role.user, Role.admin]), // admin can see any user, user can see their own
-  TransactionController.getUserTransactions
+  checkAuth([Role.user, Role.admin]), TransactionController.getUserTransactions
 );
 
 
