@@ -129,4 +129,16 @@ export const TransactionController = {
       data: result,
     });
   }),
+
+  getUserTransactions: catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params; // user id from URL
+
+  const transactions = await TransactionService.getTransactionsByUserId(id);
+
+  res.status(httpStatus.OK).json({
+    success: true,
+    message: "Transactions retrieved successfully",
+    data: transactions,
+  });
+}),
 };
