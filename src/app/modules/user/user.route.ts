@@ -1,5 +1,5 @@
 import express from 'express';
-import { getAllUsers, getSingleUser } from './user.controller';
+import { getAllUsers, getSingleUser, updateUser } from './user.controller';
 import { checkAuth } from '../../middlewares/checkAuth';
 import { Role } from './user.interface';
 
@@ -10,5 +10,7 @@ router.get('/', checkAuth(Role.admin), getAllUsers);
 
 // ✅ All authenticated users can get their own user info
 router.get('/:id', checkAuth(), getSingleUser);
+
+router.patch("/:id", checkAuth(), updateUser);
 
 export const UserRoutes = router;
