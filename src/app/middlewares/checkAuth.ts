@@ -1,8 +1,9 @@
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
 import { envVars } from '../config/env';
+import { Role } from '../modules/user/user.interface';
 
-export const checkAuth = (requiredRoles?: string | string[]) => {
+export const checkAuth = (requiredRoles?: string | string[], p0?: Role[]) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
       const token = req.headers.authorization?.split(' ')[1];

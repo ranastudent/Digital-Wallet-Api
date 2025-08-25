@@ -18,7 +18,7 @@ export const getAllUsers = catchAsync(async (req: Request, res: Response) => {
 });
 
 export const getAllAgents = catchAsync(async (req: Request, res: Response) => {
-  const agents = await User.find({ role: 'agent' }).select('-password');
+  const agents = await User.find({ role: 'agent'  }).select('-password');
 
   res.status(httpStatus.OK).json({
     success: true,

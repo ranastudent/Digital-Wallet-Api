@@ -14,7 +14,7 @@ router.get('/agents', checkAuth([Role.admin]), getAllAgents);
 
 router.get('/wallets', checkAuth([Role.admin]), getAllWallets);
 
-router.get('/transactions', checkAuth(Role.admin), getAllTransactions);
+router.get('/transactions', checkAuth([Role.admin], [Role.agent]), getAllTransactions);
 
 router.patch('/wallets/:walletId/block', checkAuth(Role.admin), blockWallet);
 
