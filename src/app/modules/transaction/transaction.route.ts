@@ -33,8 +33,14 @@ router.get('/agent/commissions', checkAuth(Role.agent), TransactionController.ge
 
 router.get(
   "/my-transaction",
-  checkAuth([Role.user, Role.admin]),
+  checkAuth([Role.user, Role.admin, Role.agent]),
   TransactionController.getUserTransactions
+);
+
+router.get(
+  "/my-latest-transaction",
+  checkAuth([Role.user, Role.admin, Role.agent]),
+  TransactionController.getLatestUserTransaction
 );
 
 

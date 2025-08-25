@@ -143,4 +143,18 @@ export const TransactionController = {
       data: transactions,
     });
   }),
+
+    getLatestUserTransaction: catchAsync(async (req: Request, res: Response) => {
+    const userId = req.user?._id;
+
+    const latestTransaction =
+      await TransactionService.getLatestTransactionByUserId(userId as string);
+
+    res.status(httpStatus.OK).json({
+      success: true,
+      message: "Latest transaction retrieved successfully",
+      data: latestTransaction,
+    });
+  }),
+
 };

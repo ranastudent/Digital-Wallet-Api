@@ -291,4 +291,26 @@ export const TransactionService = {
     .populate("to")
     .sort({ createdAt: -1 });
 },
+
+  getLatestTransactionByUserId: async (userId: string) => {
+    const wallet = await Wallet.findOne({ user: userId });
+    if (!wallet) throw new AppError(httpStatus.NOT_FOUND, "Wallet not found");
+
+    const walletId = wallet._id;
+
+    const latestTransaction = await Transaction.findOne({
+      $or: [{ from: walletId }, { to: walletId }],
+    })
+      .sort({ createdAt: -1, _id: -1 }) // ✅ newest first
+      .populate("from")
+      .populate("to");
+
+    if (!latestTransaction) {
+      throw new AppError(httpStatus.NOT_FOUND, "No transactions found");
+    }
+
+    return latestTransaction;
+  },
+
+
 };
