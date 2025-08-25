@@ -1,7 +1,4 @@
-import app from "../app"; // adjust path based on your structure
-import { IncomingMessage, ServerResponse } from "http";
+import app from '../app';  // your Express app
+import serverless from 'serverless-http';
 
-// Vercel expects a default export handler(req, res)
-export default function handler(req: IncomingMessage, res: ServerResponse) {
-  return app(req, res);
-}
+export default serverless(app);
