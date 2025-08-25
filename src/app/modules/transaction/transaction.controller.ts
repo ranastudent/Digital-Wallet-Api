@@ -17,7 +17,7 @@ export const TransactionController = {
       success: true,
       message: "Add money successful",
       data: {
-        ...transaction.toObject(), // toObject() removes Mongoose methods
+        ...transaction.toObject(),
         currentBalance,
       },
     });
@@ -76,7 +76,6 @@ export const TransactionController = {
     });
   }),
 
-  // src/app/modules/transaction/transaction.controller.ts
   cashInByAgent: catchAsync(async (req: Request, res: Response) => {
     const agentId = req.user?._id;
     const { recipientPhone, amount } = req.body;
@@ -130,15 +129,18 @@ export const TransactionController = {
     });
   }),
 
+  // ✅ Updated: no longer uses req.params.id, uses req.user._id instead
   getUserTransactions: catchAsync(async (req: Request, res: Response) => {
-  const { id } = req.params; // user id from URL
+    const userId = req.user?._id;
 
-  const transactions = await TransactionService.getTransactionsByUserId(id);
+    const transactions = await TransactionService.getTransactionsByUserId(
+      userId as string
+    );
 
-  res.status(httpStatus.OK).json({
-    success: true,
-    message: "Transactions retrieved successfully",
-    data: transactions,
-  });
-}),
+    res.status(httpStatus.OK).json({
+      success: true,
+      message: "Transactions retrieved successfully",
+      data: transactions,
+    });
+  }),
 };

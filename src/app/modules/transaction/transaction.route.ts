@@ -32,8 +32,9 @@ router.post(
 router.get('/agent/commissions', checkAuth(Role.agent), TransactionController.getAgentCommissionHistory);
 
 router.get(
-  '/:id',
-  checkAuth([Role.user, Role.admin]), TransactionController.getUserTransactions
+  "/my-transaction",
+  checkAuth([Role.user, Role.admin]),
+  TransactionController.getUserTransactions
 );
 
 
