@@ -13,7 +13,7 @@ const router = express_1.default.Router();
 // Admin-only access
 router.get('/users', (0, checkAuth_1.checkAuth)([user_interface_1.Role.admin]), admin_controller_1.getAllUsers);
 router.get('/agents', (0, checkAuth_1.checkAuth)([user_interface_1.Role.admin]), admin_controller_1.getAllAgents);
-router.get('/wallets', (0, checkAuth_1.checkAuth)(user_interface_1.Role.admin), admin_controller_1.getAllWallets);
+router.get('/wallets', (0, checkAuth_1.checkAuth)([user_interface_1.Role.admin]), admin_controller_1.getAllWallets);
 router.get('/transactions', (0, checkAuth_1.checkAuth)(user_interface_1.Role.admin), admin_controller_1.getAllTransactions);
 router.patch('/wallets/:walletId/block', (0, checkAuth_1.checkAuth)(user_interface_1.Role.admin), admin_controller_1.blockWallet);
 router.patch('/wallets/:walletId/unblock', (0, checkAuth_1.checkAuth)(user_interface_1.Role.admin), admin_controller_1.unblockWallet);

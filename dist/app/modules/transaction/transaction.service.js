@@ -215,4 +215,16 @@ exports.TransactionService = {
             totalCommission,
         };
     },
+    getTransactionsByUserId: async (userId) => {
+        const wallet = await wallet_model_1.Wallet.findOne({ user: userId });
+        if (!wallet)
+            throw new Apperror_2.default(http_status_1.default.NOT_FOUND, "Wallet not found");
+        const walletId = wallet._id;
+        return await transaction_model_1.Transaction.find({
+            $or: [{ from: walletId }, { to: walletId }],
+        })
+            .populate("from")
+            .populate("to")
+            .sort({ createdAt: -1 });
+    },
 };

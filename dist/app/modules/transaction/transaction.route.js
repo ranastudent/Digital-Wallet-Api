@@ -13,4 +13,5 @@ router.get('/', (0, checkAuth_1.checkAuth)(['admin', 'user', 'agent']), transact
 router.post('/agent/cash-in', (0, checkAuth_1.checkAuth)(user_interface_1.Role.agent), transaction_controller_1.TransactionController.cashInByAgent);
 router.post('/agent/cash-out', (0, checkAuth_1.checkAuth)(user_interface_1.Role.agent), transaction_controller_1.TransactionController.cashOutByAgent);
 router.get('/agent/commissions', (0, checkAuth_1.checkAuth)(user_interface_1.Role.agent), transaction_controller_1.TransactionController.getAgentCommissionHistory);
+router.get("/my-transaction", (0, checkAuth_1.checkAuth)([user_interface_1.Role.user, user_interface_1.Role.admin]), transaction_controller_1.TransactionController.getUserTransactions);
 exports.TransactionRoutes = router;
