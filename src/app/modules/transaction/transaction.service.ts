@@ -28,7 +28,7 @@ export const TransactionService = {
 
     if (!wallet) throw new Apperror(httpStatus.NOT_FOUND, "Wallet not found");
 
-    ensureWalletIsActive(wallet); // ✅ Now this checks the correct wallet
+    ensureWalletIsActive(wallet);
 
     wallet.balance += amount;
     await wallet.save();
@@ -54,7 +54,7 @@ export const TransactionService = {
 
     const wallet = await Wallet.findOne({ user: userId });
     if (!wallet) throw new Apperror(httpStatus.NOT_FOUND, "Wallet not found");
-    ensureWalletIsActive(wallet); // 👈 Add this
+    ensureWalletIsActive(wallet);
 
     if (wallet.balance < amount) {
       throw new Apperror(httpStatus.BAD_REQUEST, "Insufficient balance");
@@ -76,11 +76,8 @@ export const TransactionService = {
       currentBalance: wallet.balance,
     };
   },
-  sendMoney: async (
-    senderId: string,
-    recipientPhone: string,
-    amount: number
-  ) => {
+
+  sendMoney: async (senderId: string, recipientPhone: string, amount: number) => {
     if (!amount || amount <= 0) {
       throw new Apperror(httpStatus.BAD_REQUEST, "Invalid amount");
     }
@@ -100,13 +97,11 @@ export const TransactionService = {
       throw new Apperror(httpStatus.BAD_REQUEST, "Insufficient balance");
     }
 
-    // Step 1: Find recipient user
     const recipientUser = await User.findOne({ phoneNumber: recipientPhone });
     if (!recipientUser) {
       throw new Apperror(httpStatus.NOT_FOUND, "Recipient user not found");
     }
 
-    // Step 2: Find recipient's wallet
     const recipientWallet = await Wallet.findOne({ user: recipientUser._id });
     if (!recipientWallet) {
       throw new Apperror(httpStatus.NOT_FOUND, "Recipient wallet not found");
@@ -115,11 +110,9 @@ export const TransactionService = {
     ensureWalletIsActive(recipientWallet);
     ensureWalletIsActive(senderWallet);
 
-    // Deduct from sender
     senderWallet.balance -= amount;
     await senderWallet.save();
 
-    // Add to recipient
     recipientWallet.balance += amount;
     await recipientWallet.save();
 
@@ -140,12 +133,17 @@ export const TransactionService = {
   getTransactionHistory: async (userId: string, role: string) => {
     if (role === "admin") {
       return await Transaction.find()
-        .populate("from")
-        .populate("to")
+        .populate({
+          path: "from",
+          populate: { path: "user", select: "email phoneNumber" },
+        })
+        .populate({
+          path: "to",
+          populate: { path: "user", select: "email phoneNumber" },
+        })
         .sort({ createdAt: -1 });
     }
 
-    // For user or agent
     const userWallet = await Wallet.findOne({ user: userId });
     if (!userWallet) {
       throw new Apperror(httpStatus.NOT_FOUND, "Wallet not found");
@@ -156,17 +154,18 @@ export const TransactionService = {
     return await Transaction.find({
       $or: [{ from: walletId }, { to: walletId }],
     })
-      .populate("from")
-      .populate("to")
+      .populate({
+        path: "from",
+        populate: { path: "user", select: "email phoneNumber" },
+      })
+      .populate({
+        path: "to",
+        populate: { path: "user", select: "email phoneNumber" },
+      })
       .sort({ createdAt: -1 });
   },
 
-  // src/app/modules/transaction/transaction.service.ts
-  cashInByAgent: async (
-    agentId: string,
-    recipientPhone: string,
-    amount: number
-  ) => {
+  cashInByAgent: async (agentId: string, recipientPhone: string, amount: number) => {
     const commission = amount * 0.01;
     if (amount <= 0) throw new Error("Amount must be greater than 0");
 
@@ -175,6 +174,7 @@ export const TransactionService = {
 
     const recipientWallet = await Wallet.findOne({ user: recipient._id });
     if (!recipientWallet) throw new Error("Recipient wallet not found");
+
     const agent = await User.findById(agentId);
     if (!agent || agent.role !== "agent") {
       throw new AppError(httpStatus.NOT_FOUND, "Agent not found");
@@ -187,13 +187,10 @@ export const TransactionService = {
     }
 
     ensureWalletIsActive(recipientWallet);
-    // ✅ now safely used
 
-    // Update balance
     recipientWallet.balance += amount;
     await recipientWallet.save();
 
-    // Log transaction
     const transaction = await Transaction.create({
       from: agentId,
       to: recipientWallet._id,
@@ -207,11 +204,7 @@ export const TransactionService = {
     return { transaction, currentBalance: recipientWallet.balance };
   },
 
-  cashOutByAgent: async (
-    agentId: string,
-    userPhone: string,
-    amount: number
-  ) => {
+  cashOutByAgent: async (agentId: string, userPhone: string, amount: number) => {
     if (amount <= 0) {
       throw new Apperror(httpStatus.BAD_REQUEST, "Invalid amount");
     }
@@ -223,7 +216,7 @@ export const TransactionService = {
     if (!recipientWallet)
       throw new Apperror(httpStatus.NOT_FOUND, "User wallet not found");
 
-    ensureWalletIsActive(recipientWallet); // ✅ now safe
+    ensureWalletIsActive(recipientWallet);
 
     if (recipientWallet.balance < amount) {
       throw new Apperror(httpStatus.BAD_REQUEST, "Insufficient user balance");
@@ -240,11 +233,10 @@ export const TransactionService = {
       );
     }
 
-    // Deduct from user's wallet
     recipientWallet.balance -= amount;
     await recipientWallet.save();
     const commission = amount * 0.01;
-    // Log transaction
+
     const transaction = await Transaction.create({
       from: recipientWallet._id,
       to: agentId,
@@ -265,7 +257,16 @@ export const TransactionService = {
     const commissionTransactions = await Transaction.find({
       agent: agentId,
       type: { $in: ["cash-in", "cash-out"] },
-    }).sort({ createdAt: -1 });
+    })
+      .populate({
+        path: "from",
+        populate: { path: "user", select: "email phoneNumber" },
+      })
+      .populate({
+        path: "to",
+        populate: { path: "user", select: "email phoneNumber" },
+      })
+      .sort({ createdAt: -1 });
 
     const totalCommission = commissionTransactions.reduce(
       (sum, txn) => sum + (txn.commission || 0),
@@ -279,18 +280,24 @@ export const TransactionService = {
   },
 
   getTransactionsByUserId: async (userId: string) => {
-  const wallet = await Wallet.findOne({ user: userId });
-  if (!wallet) throw new AppError(httpStatus.NOT_FOUND, "Wallet not found");
+    const wallet = await Wallet.findOne({ user: userId });
+    if (!wallet) throw new AppError(httpStatus.NOT_FOUND, "Wallet not found");
 
-  const walletId = wallet._id;
+    const walletId = wallet._id;
 
-  return await Transaction.find({
-    $or: [{ from: walletId }, { to: walletId }],
-  })
-    .populate("from")
-    .populate("to")
-    .sort({ createdAt: -1 });
-},
+    return await Transaction.find({
+      $or: [{ from: walletId }, { to: walletId }],
+    })
+      .populate({
+        path: "from",
+        populate: { path: "user", select: "email phoneNumber" },
+      })
+      .populate({
+        path: "to",
+        populate: { path: "user", select: "email phoneNumber" },
+      })
+      .sort({ createdAt: -1 });
+  },
 
   getLatestTransactionByUserId: async (userId: string) => {
     const wallet = await Wallet.findOne({ user: userId });
@@ -301,9 +308,15 @@ export const TransactionService = {
     const latestTransaction = await Transaction.findOne({
       $or: [{ from: walletId }, { to: walletId }],
     })
-      .sort({ createdAt: -1, _id: -1 }) // ✅ newest first
-      .populate("from")
-      .populate("to");
+      .sort({ createdAt: -1, _id: -1 })
+      .populate({
+        path: "from",
+        populate: { path: "user", select: "email phoneNumber" },
+      })
+      .populate({
+        path: "to",
+        populate: { path: "user", select: "email phoneNumber" },
+      });
 
     if (!latestTransaction) {
       throw new AppError(httpStatus.NOT_FOUND, "No transactions found");
@@ -311,6 +324,4 @@ export const TransactionService = {
 
     return latestTransaction;
   },
-
-
 };
