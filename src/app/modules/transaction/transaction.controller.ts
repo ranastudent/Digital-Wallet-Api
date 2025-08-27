@@ -10,7 +10,10 @@ export const TransactionController = {
     const userId = req.user?._id as string;
     const { amount } = req.body;
 
-    const { transaction, currentBalance } = await TransactionService.addMoney(userId, amount);
+    const { transaction, currentBalance } = await TransactionService.addMoney(
+      userId,
+      amount
+    );
 
     res.status(httpStatus.OK).json({
       success: true,
@@ -27,7 +30,8 @@ export const TransactionController = {
     const userId = req.user?._id as string;
     const { amount } = req.body;
 
-    const { transaction, currentBalance } = await TransactionService.withdrawMoney(userId, amount);
+    const { transaction, currentBalance } =
+      await TransactionService.withdrawMoney(userId, amount);
 
     res.status(httpStatus.OK).json({
       success: true,
@@ -65,7 +69,10 @@ export const TransactionController = {
     const userId = req.user?._id as string;
     const role = req.user?.role as string;
 
-    const transactions = await TransactionService.getTransactionHistory(userId, role);
+    const transactions = await TransactionService.getTransactionHistory(
+      userId,
+      role
+    );
 
     res.status(httpStatus.OK).json({
       success: true,
@@ -79,11 +86,8 @@ export const TransactionController = {
     const agentId = req.user?._id as string;
     const { recipientPhone, amount } = req.body;
 
-    const { transaction, currentBalance } = await TransactionService.cashInByAgent(
-      agentId,
-      recipientPhone,
-      amount
-    );
+    const { transaction, currentBalance } =
+      await TransactionService.cashInByAgent(agentId, recipientPhone, amount);
 
     res.status(httpStatus.OK).json({
       success: true,
@@ -100,11 +104,8 @@ export const TransactionController = {
     const agentId = req.user?._id as string;
     const { recipientPhone, amount } = req.body;
 
-    const { transaction, currentBalance } = await TransactionService.cashOutByAgent(
-      agentId,
-      recipientPhone,
-      amount
-    );
+    const { transaction, currentBalance } =
+      await TransactionService.cashOutByAgent(agentId, recipientPhone, amount);
 
     res.status(httpStatus.OK).json({
       success: true,
@@ -113,6 +114,34 @@ export const TransactionController = {
         ...transaction.toObject(),
         currentBalance,
       },
+    });
+  }),
+
+  // GET Agent Cash-In Summary
+  cashInSummaryByAgent: catchAsync(async (req: Request, res: Response) => {
+    const agentId = req.user?._id as string;
+
+    const transactions = await TransactionService.cashInSummaryByAgent(agentId);
+
+    res.status(httpStatus.OK).json({
+      success: true,
+      message: "Cash-in summary retrieved successfully",
+      data: transactions,
+    });
+  }),
+
+  // GET Agent Cash-Out Summary
+  cashOutSummaryByAgent: catchAsync(async (req: Request, res: Response) => {
+    const agentId = req.user?._id as string;
+
+    const transactions = await TransactionService.cashOutSummaryByAgent(
+      agentId
+    );
+
+    res.status(httpStatus.OK).json({
+      success: true,
+      message: "Cash-out summary retrieved successfully",
+      data: transactions,
     });
   }),
 
@@ -133,7 +162,9 @@ export const TransactionController = {
   getUserTransactions: catchAsync(async (req: Request, res: Response) => {
     const userId = req.user?._id as string;
 
-    const transactions = await TransactionService.getTransactionsByUserId(userId);
+    const transactions = await TransactionService.getTransactionsByUserId(
+      userId
+    );
 
     res.status(httpStatus.OK).json({
       success: true,
@@ -146,7 +177,8 @@ export const TransactionController = {
   getLatestUserTransaction: catchAsync(async (req: Request, res: Response) => {
     const userId = req.user?._id as string;
 
-    const latestTransaction = await TransactionService.getLatestTransactionByUserId(userId);
+    const latestTransaction =
+      await TransactionService.getLatestTransactionByUserId(userId);
 
     res.status(httpStatus.OK).json({
       success: true,

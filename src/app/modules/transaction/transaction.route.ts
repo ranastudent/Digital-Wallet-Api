@@ -43,6 +43,21 @@ router.get(
   TransactionController.getLatestUserTransaction
 );
 
+// Agent cash-in summary
+router.get(
+  '/agent/cash-in-summary',
+  checkAuth(Role.agent),
+  TransactionController.cashInSummaryByAgent
+);
+
+// Agent cash-out summary
+router.get(
+  '/agent/cash-out-summary',
+  checkAuth(Role.agent),
+  TransactionController.cashOutSummaryByAgent
+);
+
+
 
 
 
