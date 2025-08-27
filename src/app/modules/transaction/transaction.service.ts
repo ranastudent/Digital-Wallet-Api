@@ -165,93 +165,92 @@ export const TransactionService = {
       .sort({ createdAt: -1 });
   },
 
-  cashInByAgent: async (agentId: string, recipientPhone: string, amount: number) => {
-    const commission = amount * 0.01;
-    if (amount <= 0) throw new Error("Amount must be greater than 0");
+ cashInByAgent: async (agentId: string, recipientPhone: string, amount: number) => {
+  if (amount <= 0) throw new Error("Amount must be greater than 0");
 
-    const recipient = await User.findOne({ phoneNumber: recipientPhone });
-    if (!recipient) throw new Error("Recipient user not found");
+  const recipient = await User.findOne({ phoneNumber: recipientPhone });
+  if (!recipient) throw new Error("Recipient user not found");
 
-    const recipientWallet = await Wallet.findOne({ user: recipient._id });
-    if (!recipientWallet) throw new Error("Recipient wallet not found");
+  const recipientWallet = await Wallet.findOne({ user: recipient._id });
+  if (!recipientWallet) throw new Error("Recipient wallet not found");
 
-    const agent = await User.findById(agentId);
-    if (!agent || agent.role !== "agent") {
-      throw new AppError(httpStatus.NOT_FOUND, "Agent not found");
-    }
-    if (!agent.isAgentApproved) {
-      throw new AppError(
-        httpStatus.FORBIDDEN,
-        "Agent is not approved or has been suspended"
-      );
-    }
+  const agent = await User.findById(agentId);
+  if (!agent || agent.role !== "agent") {
+    throw new AppError(httpStatus.NOT_FOUND, "Agent not found");
+  }
+  if (!agent.isAgentApproved) {
+    throw new AppError(httpStatus.FORBIDDEN, "Agent not approved");
+  }
 
-    ensureWalletIsActive(recipientWallet);
+  // ✅ Get agent’s wallet
+  const agentWallet = await Wallet.findOne({ user: agentId });
+  if (!agentWallet) throw new AppError(httpStatus.NOT_FOUND, "Agent wallet not found");
 
-    recipientWallet.balance += amount;
-    await recipientWallet.save();
+  ensureWalletIsActive(recipientWallet);
 
-    const transaction = await Transaction.create({
-      from: agentId,
-      to: recipientWallet._id,
-      amount,
-      type: "cash-in",
-      status: "success",
-      agent: agentId,
-      commission,
-    });
+  recipientWallet.balance += amount;
+  await recipientWallet.save();
 
-    return { transaction, currentBalance: recipientWallet.balance };
-  },
+  const commission = amount * 0.01;
 
-  cashOutByAgent: async (agentId: string, userPhone: string, amount: number) => {
-    if (amount <= 0) {
-      throw new Apperror(httpStatus.BAD_REQUEST, "Invalid amount");
-    }
+  const transaction = await Transaction.create({
+    from: agentWallet._id, // ✅ store wallet, not user
+    to: recipientWallet._id,
+    amount,
+    type: "cash-in",
+    status: "success",
+    agent: agentId,
+    commission,
+  });
 
-    const recipient = await User.findOne({ phoneNumber: userPhone });
-    if (!recipient) throw new Apperror(httpStatus.NOT_FOUND, "User not found");
+  return { transaction, currentBalance: recipientWallet.balance };
+},
 
-    const recipientWallet = await Wallet.findOne({ user: recipient._id });
-    if (!recipientWallet)
-      throw new Apperror(httpStatus.NOT_FOUND, "User wallet not found");
 
-    ensureWalletIsActive(recipientWallet);
+cashOutByAgent: async (agentId: string, userPhone: string, amount: number) => {
+  if (amount <= 0) throw new Apperror(httpStatus.BAD_REQUEST, "Invalid amount");
+  
+  const recipient = await User.findOne({ phoneNumber: userPhone });
+  if (!recipient) throw new Apperror(httpStatus.NOT_FOUND, "User not found");
 
-    if (recipientWallet.balance < amount) {
-      throw new Apperror(httpStatus.BAD_REQUEST, "Insufficient user balance");
-    }
+  const recipientWallet = await Wallet.findOne({ user: recipient._id });
+  if (!recipientWallet) throw new Apperror(httpStatus.NOT_FOUND, "User wallet not found");
 
-    const agent = await User.findById(agentId);
-    if (!agent || agent.role !== "agent") {
-      throw new AppError(httpStatus.NOT_FOUND, "Agent not found");
-    }
-    if (!agent.isAgentApproved) {
-      throw new AppError(
-        httpStatus.FORBIDDEN,
-        "Agent is not approved or has been suspended"
-      );
-    }
+  ensureWalletIsActive(recipientWallet);
 
-    recipientWallet.balance -= amount;
-    await recipientWallet.save();
-    const commission = amount * 0.01;
+  if (recipientWallet.balance < amount) {
+    throw new Apperror(httpStatus.BAD_REQUEST, "Insufficient user balance");
+  }
 
-    const transaction = await Transaction.create({
-      from: recipientWallet._id,
-      to: agentId,
-      amount,
-      type: "cash-out",
-      status: "success",
-      agent: agentId,
-      commission,
-    });
+  const agent = await User.findById(agentId);
+  if (!agent || agent.role !== "agent") {
+    throw new AppError(httpStatus.NOT_FOUND, "Agent not found");
+  }
+  if (!agent.isAgentApproved) {
+    throw new AppError(httpStatus.FORBIDDEN, "Agent not approved");
+  }
 
-    return {
-      transaction,
-      currentBalance: recipientWallet.balance,
-    };
-  },
+  const agentWallet = await Wallet.findOne({ user: agentId });
+  if (!agentWallet) throw new AppError(httpStatus.NOT_FOUND, "Agent wallet not found");
+
+  recipientWallet.balance -= amount;
+  await recipientWallet.save();
+
+  const commission = amount * 0.01;
+
+  const transaction = await Transaction.create({
+    from: recipientWallet._id,
+    to: agentWallet._id, // ✅ store wallet, not user
+    amount,
+    type: "cash-out",
+    status: "success",
+    agent: agentId,
+    commission,
+  });
+
+  return { transaction, currentBalance: recipientWallet.balance };
+},
+
 
   getAgentCommissions: async (agentId: string) => {
     const commissionTransactions = await Transaction.find({
