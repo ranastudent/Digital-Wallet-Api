@@ -9,6 +9,11 @@ export interface IUser {
   email?: string;
 }
 
+export interface isBlocked {
+  type: Boolean,
+  default: false,
+}
+
 export enum Role {
   user = 'user',
   admin = 'admin',

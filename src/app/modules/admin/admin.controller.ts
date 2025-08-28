@@ -153,6 +153,45 @@ export const demoteAgentToUser = catchAsync(async (req: Request, res: Response) 
   });
 });
 
+// ✅ Block User
+export const blockUser = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  const user = await User.findByIdAndUpdate(
+    id,
+    { isBlocked: true },
+    { new: true }
+  ).select('-password');
+
+  if (!user) throw new AppError(httpStatus.NOT_FOUND, 'User not found');
+
+  res.status(httpStatus.OK).json({
+    success: true,
+    message: 'User blocked successfully',
+    data: user,
+  });
+});
+
+// ✅ Unblock User
+export const unblockUser = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  const user = await User.findByIdAndUpdate(
+    id,
+    { isBlocked: false },
+    { new: true }
+  ).select('-password');
+
+  if (!user) throw new AppError(httpStatus.NOT_FOUND, 'User not found');
+
+  res.status(httpStatus.OK).json({
+    success: true,
+    message: 'User unblocked successfully',
+    data: user,
+  });
+});
+
+
 
 
 

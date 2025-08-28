@@ -1,6 +1,6 @@
 // src/app/modules/admin/admin.route.ts
 import express from 'express';
-import { approveAgent, blockWallet, demoteAgentToUser, getAllAgents, getAllTransactions, getAllUsers, getAllWallets, promoteUserToAgent, suspendAgent, unblockWallet } from './admin.controller';
+import { approveAgent, blockUser, blockWallet, demoteAgentToUser, getAllAgents, getAllTransactions, getAllUsers, getAllWallets, promoteUserToAgent, suspendAgent, unblockUser, unblockWallet } from './admin.controller';
 
 import { Role } from '../user/user.interface';
 import { checkAuth } from '../../middlewares/checkAuth';
@@ -27,5 +27,10 @@ router.patch('/agents/:id/suspend', checkAuth(Role.admin), suspendAgent);
 router.patch('/agents/:id/make-agent', checkAuth(Role.admin), promoteUserToAgent);
 
 router.patch('/agents/:id/make-user-from-agent', checkAuth(Role.admin), demoteAgentToUser);
+
+// Block / Unblock User
+router.patch('/users/:id/block', checkAuth(Role.admin), blockUser);
+router.patch('/users/:id/unblock', checkAuth(Role.admin), unblockUser);
+
 
 export const AdminRoutes = router;
