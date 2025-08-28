@@ -7,11 +7,7 @@ export interface IUser {
   role: UserRole;
   isAgentApproved?: boolean;
   email?: string;
-}
-
-export interface isBlocked {
-  type: Boolean,
-  default: false,
+  isBlocked?: boolean; // ✅ added this
 }
 
 export enum Role {

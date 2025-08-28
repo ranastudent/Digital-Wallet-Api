@@ -8,14 +8,20 @@ import { Transaction } from '../transaction/transaction.model';
 import AppError from '../../utils/Apperror';
 
 export const getAllUsers = catchAsync(async (req: Request, res: Response) => {
-  const users = await User.find().select('-password'); // exclude password
+  const users = await User.find().select("-password");
+
+  const usersWithBlock = users.map((u) => ({
+    ...u.toObject(),
+    isBlocked: u.isBlocked ?? false, // ensure boolean always returned
+  }));
 
   res.status(httpStatus.OK).json({
     success: true,
-    message: 'All users fetched successfully',
-    data: users,
+    message: "All users fetched successfully",
+    data: usersWithBlock,
   });
 });
+
 
 export const getAllAgents = catchAsync(async (req: Request, res: Response) => {
   const agents = await User.find({ role: 'agent'  }).select('-password');
@@ -161,14 +167,17 @@ export const blockUser = catchAsync(async (req: Request, res: Response) => {
     id,
     { isBlocked: true },
     { new: true }
-  ).select('-password');
+  ).select("-password");
 
-  if (!user) throw new AppError(httpStatus.NOT_FOUND, 'User not found');
+  if (!user) throw new AppError(httpStatus.NOT_FOUND, "User not found");
 
   res.status(httpStatus.OK).json({
     success: true,
-    message: 'User blocked successfully',
-    data: user,
+    message: "User blocked successfully",
+    data: {
+      ...user.toObject(),
+      isBlocked: true, // ensure always included
+    },
   });
 });
 
@@ -180,14 +189,17 @@ export const unblockUser = catchAsync(async (req: Request, res: Response) => {
     id,
     { isBlocked: false },
     { new: true }
-  ).select('-password');
+  ).select("-password");
 
-  if (!user) throw new AppError(httpStatus.NOT_FOUND, 'User not found');
+  if (!user) throw new AppError(httpStatus.NOT_FOUND, "User not found");
 
   res.status(httpStatus.OK).json({
     success: true,
-    message: 'User unblocked successfully',
-    data: user,
+    message: "User unblocked successfully",
+    data: {
+      ...user.toObject(),
+      isBlocked: false, // ensure always included
+    },
   });
 });
 
